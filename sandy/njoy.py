@@ -1056,7 +1056,7 @@ def _groupr_input(endfin, pendfin, gendfout, mat,
     return "\n".join(text) + "\n"
 
 
-def _run_njoy(text, endf, pendf=None, exe=None):
+def _run_njoy(text, endf, pendf=None, exe=None, njoy_output=None):
     """
     Run njoy executable for given input.
 
@@ -1073,7 +1073,7 @@ def _run_njoy(text, endf, pendf=None, exe=None):
     """
     if exe is None:
         exe = get_njoy()
-    stdout = stderr = None
+    stdout = stderr = njoy_output
     stdin = text.encode()
     with TemporaryDirectory() as tmpdir:
         shutil.copy(endf, os.path.join(tmpdir, "tape20"))
@@ -1320,6 +1320,7 @@ def process_neutron(
         exe=None,
         verbose=True,
         dryrun=False,
+        njoy_output=None,
         **kwargs,
         ):
     """
@@ -1377,7 +1378,7 @@ def process_neutron(
     # Run njoy
     if dryrun:
         return text
-    outputs = _run_njoy(text, endftape, pendftape, exe=exe)
+    outputs = _run_njoy(text, endftape, pendftape, exe=exe, njoy_output=njoy_output)
     
     # Minimal output post-processing
     if "xsdir" in outputs:
