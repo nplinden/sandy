@@ -1073,7 +1073,7 @@ def _run_njoy(text, endf, pendf=None, exe=None, njoy_output=None):
     njoy_output : `int`, optional, default is `None`
         target of stderr and stdout for the NJOY process. If `None`, NJOY will 
         print its output in the terminal. If `subprocess.DEVNULL`, NJOY
-        output will be suppressed
+        output will be suppressed, default is `None`.
     """
     if exe is None:
         exe = get_njoy()
