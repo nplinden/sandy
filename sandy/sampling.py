@@ -4,6 +4,7 @@ import logging
 import argparse
 import filecmp
 import pandas as pd
+import subprocess as sp
 
 import sandy
 from sandy.tools import is_valid_file
@@ -158,6 +159,18 @@ def parse(iargs=None):
                         version='%(prog)s {}'.format(sandy.__version__),
                         help="SANDY's version.")
 
+    parser.add_argument('--supressnjoy', '-s',
+                        default=False,
+                        action="store_true",
+                        help="Supress NJOY ouputs.")
+
+    parser.add_argument('--loglevel',
+                        type=str,
+                        default="info",
+                        action='store',
+                        metavar="{debug, info, warning, error, critical}",
+                        help="Set the logger verbosity level.")
+
 
     init = parser.parse_known_args(args=iargs)[0]
     if init.acer and not init.temperatures:
@@ -310,6 +323,15 @@ def run(iargs):
     -------
     None.
     """
+
+    loglevels = {
+        "debug": logging.DEBUG,
+        "info": logging.INFO,
+        "warning": logging.WARNING,
+        "error": logging.ERROR,
+        "critical": logging.CRITICAL,
+    }
+    logging.getLogger().setLevel(loglevels[iargs.loglevel])
     logging.info(f"processing file: '{iargs.file}'")
 
     err_pendf = 0.01
@@ -319,6 +341,8 @@ def run(iargs):
         err_errorr = err_ace = err_pendf = 1
 
     endf6 = sandy.Endf6.from_file(iargs.file)
+
+    njoy_output = sp.DEVNULL if iargs.supressnjoy else None
 
     # ERRORR KEYWORDS
     nubar = bool(31 in iargs.mf) and (31 in endf6.mf)
@@ -333,7 +357,8 @@ def run(iargs):
         chi=chi,
         mubar=mubar,
         groupr_kws=dict(nubar=nubar, chi=chi, mubar=mubar, ign=2),
-        errorr_kws=dict(ign=2)
+        errorr_kws=dict(ign=2),
+        njoy_output=njoy_output
         )
     if iargs.mt33:
         errorr_kws["errorr33_kws"] = dict(mt=iargs.mt33)
@@ -376,6 +401,7 @@ def run(iargs):
         verbose=iargs.debug,
         err=err_pendf,
         minimal_processing=iargs.debug,
+        njoy_output=njoy_output,
         )
 
     # ACE KEYWORDS
@@ -385,6 +411,7 @@ def run(iargs):
         minimal_processing=iargs.debug,
         temperature=temperature,
         purr=False,
+        njoy_output=njoy_output,
         )
 
         
