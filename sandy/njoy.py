@@ -1070,6 +1070,10 @@ def _run_njoy(text, endf, pendf=None, exe=None, njoy_output=None):
         njoy input file passed to `Popen` as `stdin` (it must be encoded first)
     exe : `str`, optional, default is `None`
         njoy executable: if `None` (default) get it from `NJOY` env variable
+    njoy_output : `int`, optional, default is `None`
+        target of stderr and stdout for the NJOY process. If `None`, NJOY will 
+        print its output in the terminal. If `subprocess.DEVNULL`, NJOY
+        output will be suppressed
     """
     if exe is None:
         exe = get_njoy()
