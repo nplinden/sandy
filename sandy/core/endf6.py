@@ -28,6 +28,7 @@ from sandy.libraries import (
     N_FILES_JEFF_33_IAEA,
     N_FILES_JEFF_40T0_NEA,
     N_FILES_JENDL_40U_IAEA,
+    N_FILES_TENDL_2023_PSI,
     N_FILES_IRDFF_2_IAEA,
     URL_N_ENDFB_71_IAEA,
     URL_N_JEFF_32_NEA,
@@ -35,6 +36,7 @@ from sandy.libraries import (
     URL_N_JEFF_40T0_NEA,
     URL_N_ENDFB_80_IAEA,
     URL_N_JENDL_40U_IAEA,
+    URL_N_TENDL_2023_PSI,
     URL_N_IRDFF_2_IAEA,
 
     NFPY_FILES_ENDFB_71_IAEA,
@@ -363,6 +365,11 @@ def get_endf6_file(library, kind, zam, to_file=False):
         elif library_ == "jendl_40u":
             url = URL_N_JENDL_40U_IAEA
             files = N_FILES_JENDL_40U_IAEA
+        elif library_ == "tendl_2023":
+            url = URL_N_TENDL_2023_PSI
+            files = N_FILES_TENDL_2023_PSI
+            foo_read = Endf6.read_url
+            foo_get = Endf6.from_url
         elif library_ == "irdff_2":
             url = URL_N_IRDFF_2_IAEA
             files = N_FILES_IRDFF_2_IAEA
