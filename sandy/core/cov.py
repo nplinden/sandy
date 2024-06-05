@@ -622,7 +622,7 @@ class CategoryCov():
 
         # -- Save seed and singulare values
         if to_excel:
-            with pd.ExcelWriter(to_excel, mode='w') as writer:
+            with pd.ExcelWriter(to_excel, mode='w', engine='openpyxl') as writer:
                 pd.Series(seed_).to_excel(writer, header=None, index=None, sheet_name='SEED')
                 pd.Series(Sr).to_excel(writer, header=None, index=None, sheet_name='SVALUES')
 
@@ -647,7 +647,7 @@ class CategoryCov():
 
         # -- Save samples
         if to_excel:
-            with pd.ExcelWriter(to_excel, mode='a') as writer:
+            with pd.ExcelWriter(to_excel, mode='a', engine="openpyxl") as writer:
                 # this might go into Samples
                 s = samples.reset_index()
                 loc = s.columns.get_loc("E")
