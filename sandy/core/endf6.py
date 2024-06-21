@@ -948,25 +948,32 @@ class _FormattedFile():
                             .to_dict()
         return cls(data)
 
-    def _get_section_df(self, mat, mf, mt, delimiter="?"):
+    def _get_section_df(self, mat, mf, mt):
         """
         """
         text = self.data[(mat, mf, mt)]
+        delimiters = ["?", "@", "$", "¤"]
+        for delimiter in delimiters:
+            try:
 
-        def foo(x):
-            return sandy.shared.add_delimiter_every_n_characters(
-                x[:66],
-                11,
-                delimiter=delimiter,
-            )
-        newtext = "\n".join(map(foo, text.splitlines())).replace('"', '*')
-        df = pd.read_csv(
-            io.StringIO(sandy.shared.add_exp_in_endf6_text(newtext)),
-            delimiter=delimiter,
-            na_filter=True,
-            names=["C1", "C2", "L1", "L2", "N1", "N2"],
-        )
-        return df
+                def foo(x):
+                    return sandy.shared.add_delimiter_every_n_characters(
+                        x[:66],
+                        11,
+                        delimiter=delimiter,
+                    )
+
+                newtext = "\n".join(map(foo, text.splitlines())).replace('"', '*')
+                df = pd.read_csv(
+                    io.StringIO(sandy.shared.add_exp_in_endf6_text(newtext)),
+                    delimiter=delimiter,
+                    na_filter=True,
+                    names=["C1", "C2", "L1", "L2", "N1", "N2"],
+                )
+                return df
+            except pd.errors.ParserError:
+                logging.info(f"Could not parse Endf6 as DataFrame using '{delimiter}' delimiter")
+        raise ValueError("Could not find suitable delimiter to parse Endf6 file.")
 
     def add_section(self, mat, mf, mt, text):
         """
