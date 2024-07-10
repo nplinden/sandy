@@ -275,6 +275,10 @@ def get_endf6_file(library, kind, zam, to_file=False):
     >>> tape = sandy.get_endf6_file("jendl_40u", 'xs', 10010)
     >>> assert type(tape) is sandy.Endf6
 
+    Import hydrogen file from TENDL-2023
+    >>> tape = sandy.get_endf6_file("tendl_2023", 'xs', 10010)
+    >>> assert type(tape) is sandy.Endf6
+
     Import Neutron-Induced Fission Product Yields for Th-227 from ENDF/B-VII.1.
     >>> tape = sandy.get_endf6_file("endfb_71", 'nfpy', 902270)
     >>> assert type(tape) is sandy.Endf6
