@@ -203,8 +203,8 @@ class Samples():
         df = self.data.unstack(level=levels)
         
         # -- Iterate over samples
-        for n, p in df.groupby(axis=1, level=self._columnsname):
-            s = p.droplevel(self._columnsname, axis=1)
+        for n, p in df.T.groupby(level=self._columnsname):
+            s = p.T.droplevel(self._columnsname, axis=1)
             adds = []
             for mat in s.columns.get_level_values("MAT").unique():
                 
