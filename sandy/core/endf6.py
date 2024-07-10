@@ -25,12 +25,14 @@ from sandy.libraries import (
     N_FILES_ENDFB_71_IAEA,
     N_FILES_ENDFB_80_IAEA,
     N_FILES_JEFF_32_NEA,
+    N_FILES_JEFF_311_IAEA,
     N_FILES_JEFF_33_IAEA,
     N_FILES_JEFF_40T0_NEA,
     N_FILES_JENDL_40U_IAEA,
     N_FILES_IRDFF_2_IAEA,
     URL_N_ENDFB_71_IAEA,
     URL_N_JEFF_32_NEA,
+    URL_N_JEFF_311_IAEA,
     URL_N_JEFF_33_IAEA,
     URL_N_JEFF_40T0_NEA,
     URL_N_ENDFB_80_IAEA,
@@ -188,6 +190,7 @@ def get_endf6_file(library, kind, zam, to_file=False):
             * `'endfb_71'`
             * `'endfb_80'`
             * `'irdff_2'`
+            * `'jeff_311'`
             * `'jeff_32'`
             * `'jeff_33'`
             * `'jendl_40u'`
@@ -251,6 +254,10 @@ def get_endf6_file(library, kind, zam, to_file=False):
     --------
     Import hydrogen file from JEFF-3.3.
     >>> tape = sandy.get_endf6_file("jeff_33", 'xs', 10010)
+    >>> assert type(tape) is sandy.Endf6
+
+    Import hydrogen file from JEFF-3.1.1.
+    >>> tape = sandy.get_endf6_file("jeff_311", 'xs', 10010)
     >>> assert type(tape) is sandy.Endf6
 
     Import hydrogen file from ENDF/B-VII.1.
@@ -333,6 +340,7 @@ def get_endf6_file(library, kind, zam, to_file=False):
     foo_read = Endf6.read_zipurl
     if kind == 'xs':
         available_libs = (
+            "jeff_311".upper(),
             "jeff_32".upper(),
             "jeff_33".upper(),
             "endfb_71".upper(),
@@ -346,6 +354,9 @@ def get_endf6_file(library, kind, zam, to_file=False):
             files = N_FILES_JEFF_40T0_NEA
             foo_read = Endf6.read_url
             foo_get = Endf6.from_url
+        elif library_ == "jeff_311":
+            url = URL_N_JEFF_311_IAEA
+            files = N_FILES_JEFF_311_IAEA
         elif library_ == "jeff_33":
             url = URL_N_JEFF_33_IAEA
             files = N_FILES_JEFF_33_IAEA
