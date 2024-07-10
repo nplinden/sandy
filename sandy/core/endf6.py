@@ -11,9 +11,11 @@ from os.path import dirname, join
 from functools import reduce
 from tempfile import TemporaryDirectory
 import logging
+import urllib
 from urllib.request import urlopen, Request
 from zipfile import ZipFile
 import re
+import warnings
 
 import multiprocessing as mp
 import numpy as np
@@ -799,7 +801,7 @@ class _FormattedFile():
         return tape
 
     @staticmethod
-    def read_zipurl(filename, rooturl):
+    def read_zipurl(filename, rooturl, mode=2):
         """
         Given a filename and the url where the file is located (in
         zipped format), extract the ENDF6 data from the file into
@@ -839,15 +841,43 @@ class _FormattedFile():
         """
         rootname = os.path.splitext(filename)[0]
         zipurl = f"{rooturl}/{rootname}.zip"
+
         # set a known browser user agent to ensure access
-        req = Request(zipurl, headers={'User-Agent': 'Mozilla/5.0'})
-        with urlopen(req) as zipresp:
-            with ZipFile(io.BytesIO(zipresp.read())) as zfile:
+
+        if mode == 1:
+            req = Request(zipurl, headers={'User-Agent': 'Mozilla/5.0'})
+            with urlopen(req) as zipresp:
+                with ZipFile(io.BytesIO(zipresp.read())) as zfile:
+                    with TemporaryDirectory() as td:
+                        zfile.extract(filename, path=td)
+                        tmpfile = join(td, filename)
+                        with open(tmpfile, "r") as f:
+                            text = f.read()
+
+        elif mode == 2:  # as of 7/10/2024 mode 1 is deprecated because of changes on the IAEA websites
+            class AppURLopener(urllib.request.FancyURLopener):
+                version = "Mozilla/5.0"
+
+            # Instantiate the custom opener
+            opener = AppURLopener()
+
+            # Open the URL using the custom opener
+            response = opener.open(zipurl)
+                
+            # Read the response content into a bytes object
+            zip_data = response.read()
+
+            # Ensure the response is closed
+            response.close()
+
+            # Use the zipfile module to read the zip file from the bytes object
+            with ZipFile(io.BytesIO(zip_data)) as zfile:
                 with TemporaryDirectory() as td:
                     zfile.extract(filename, path=td)
                     tmpfile = join(td, filename)
                     with open(tmpfile, "r") as f:
                         text = f.read()
+
         return text
 
     @classmethod
