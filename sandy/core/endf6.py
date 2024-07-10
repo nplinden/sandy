@@ -256,6 +256,10 @@ def get_endf6_file(library, kind, zam, to_file=False):
     >>> tape = sandy.get_endf6_file("jeff_33", 'xs', 10010)
     >>> assert type(tape) is sandy.Endf6
 
+    Import hydrogen file from JEFF-3.1.1.
+    >>> tape = sandy.get_endf6_file("jeff_311", 'xs', 10010)
+    >>> assert type(tape) is sandy.Endf6
+
     Import hydrogen file from ENDF/B-VII.1.
     >>> tape = sandy.get_endf6_file("endfb_71", 'xs', 10010)
     >>> assert type(tape) is sandy.Endf6
@@ -336,6 +340,7 @@ def get_endf6_file(library, kind, zam, to_file=False):
     foo_read = Endf6.read_zipurl
     if kind == 'xs':
         available_libs = (
+            "jeff_311".upper(),
             "jeff_32".upper(),
             "jeff_33".upper(),
             "endfb_71".upper(),
