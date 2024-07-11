@@ -61,6 +61,13 @@ def parse(iargs=None):
                              " - first perturbation coefficient to consider\n"
                              " - last perturbation coefficient to consider")
 
+    parser.add_argument('--loglevel',
+                        type=str,
+                        default="info",
+                        action='store',
+                        metavar="{debug, info, warning, error, critical}",
+                        help="Set the logger verbosity level.")
+
     parser.add_argument('--mat',
                         type=int,
                         default=list(range(1, 10000)),
@@ -145,6 +152,11 @@ def parse(iargs=None):
                         help="seed for random sampling of MF35 covariance "
                              "matrix (default = random)")
 
+    parser.add_argument('--supressnjoy',
+                        default=False,
+                        action="store_true",
+                        help="Supress NJOY ouputs.")
+
     parser.add_argument('--temperatures', '-T',
                         default=None,
                         type=float,
@@ -158,19 +170,6 @@ def parse(iargs=None):
                         action='version',
                         version='%(prog)s {}'.format(sandy.__version__),
                         help="SANDY's version.")
-
-    parser.add_argument('--supressnjoy', '-s',
-                        default=False,
-                        action="store_true",
-                        help="Supress NJOY ouputs.")
-
-    parser.add_argument('--loglevel',
-                        type=str,
-                        default="info",
-                        action='store',
-                        metavar="{debug, info, warning, error, critical}",
-                        help="Set the logger verbosity level.")
-
 
     init = parser.parse_known_args(args=iargs)[0]
     if init.acer and not init.temperatures:
