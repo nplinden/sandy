@@ -212,7 +212,7 @@ def multi_run(foo):
     >>> assert "1001.09c" in open("1001_0.09c.xsd").read()
     >>> assert "1001.09c" in open("1001_1.09c").read()
     >>> assert "1001.09c" in open("1001_1.09c.xsd").read()
-    >>> assert not filecmp.cmp("1001_0.09c", "1001_1.09c")
+    >>> assert not filecmp.cmp("1001_0.09c", "1001_1.09c", shallow=False)
 
     Run the same on a single process.
     >>> cli = "H1.jeff33 --acer True --samples 2 --processes 2 --temperatures 900 --seed33 5 --outname={ZAM}_{SMP}_SP"
