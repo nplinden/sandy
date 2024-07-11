@@ -1001,10 +1001,32 @@ class _FormattedFile():
                             .to_dict()
         return cls(data)
 
-    def _get_section_df(self, mat, mf, mt, delimiter="?"):
+    def _get_section_df(self, mat, mf, mt):
         """
+        
+        Examples
+        --------
+        Check if we can read Pu240 file from JEFF-3.1.1, where a "?" is found in the header.
+        >>> tape = sandy.get_endf6_file("jeff_311", "xs", 942400)
+        >>> assert "?" in tape.data[(9440, 1, 451)]
+        >>> out = tape._get_section_df(9440, 1, 451)
+        
+        Let's make it fail.
+        >>> import pytest
+        >>> text = " 94-Pu-240 BRC,CAD    EVAL-JUL04 Bouland Derrien Morillon R?@$¤n  9440 1451    5"
+        >>> with pytest.raises(ValueError) as exc_info:
+        ...    sandy.Endf6.from_text(text)._get_section_df(9440, 1, 451)
         """
         text = self.data[(mat, mf, mt)]
+        delimiters = ["?", "@", "$", "¤"]
+        found = False
+        for delimiter in delimiters:
+            found = delimiter not in text
+            if found:
+                break
+            logging.info(f"Could not parse Endf6 as DataFrame using '{delimiter}' delimiter")
+        if not found:
+            raise ValueError("Could not find suitable delimiter to parse Endf6 file.")
 
         def foo(x):
             return sandy.shared.add_delimiter_every_n_characters(
@@ -1012,6 +1034,7 @@ class _FormattedFile():
                 11,
                 delimiter=delimiter,
             )
+
         newtext = "\n".join(map(foo, text.splitlines())).replace('"', '*')
         df = pd.read_csv(
             io.StringIO(sandy.shared.add_exp_in_endf6_text(newtext)),
@@ -1772,7 +1795,7 @@ class Endf6(_FormattedFile):
         Check input pendf file
         >>> import pytest
         >>> with pytest.raises(Exception) as e_info:
-        >>>    e6.get_ace(pendf=e6)
+        ...    e6.get_ace(pendf=e6)
         """
         if suffix:
             kwargs["suffixes"] = [suffix]
