@@ -11,9 +11,11 @@ from os.path import dirname, join
 from functools import reduce
 from tempfile import TemporaryDirectory
 import logging
+import urllib
 from urllib.request import urlopen, Request
 from zipfile import ZipFile
 import re
+import warnings
 
 import multiprocessing as mp
 import numpy as np
@@ -25,16 +27,20 @@ from sandy.libraries import (
     N_FILES_ENDFB_71_IAEA,
     N_FILES_ENDFB_80_IAEA,
     N_FILES_JEFF_32_NEA,
+    N_FILES_JEFF_311_IAEA,
     N_FILES_JEFF_33_IAEA,
     N_FILES_JEFF_40T0_NEA,
     N_FILES_JENDL_40U_IAEA,
+    N_FILES_TENDL_2023_PSI,
     N_FILES_IRDFF_2_IAEA,
     URL_N_ENDFB_71_IAEA,
     URL_N_JEFF_32_NEA,
+    URL_N_JEFF_311_IAEA,
     URL_N_JEFF_33_IAEA,
     URL_N_JEFF_40T0_NEA,
     URL_N_ENDFB_80_IAEA,
     URL_N_JENDL_40U_IAEA,
+    URL_N_TENDL_2023_PSI,
     URL_N_IRDFF_2_IAEA,
 
     NFPY_FILES_ENDFB_71_IAEA,
@@ -188,9 +194,11 @@ def get_endf6_file(library, kind, zam, to_file=False):
             * `'endfb_71'`
             * `'endfb_80'`
             * `'irdff_2'`
+            * `'jeff_311'`
             * `'jeff_32'`
             * `'jeff_33'`
             * `'jendl_40u'`
+            * `'tendl_2023'`
         for 'nfpy':
             * `'endfb_71'`
             * `'jeff_311'`
@@ -253,6 +261,10 @@ def get_endf6_file(library, kind, zam, to_file=False):
     >>> tape = sandy.get_endf6_file("jeff_33", 'xs', 10010)
     >>> assert type(tape) is sandy.Endf6
 
+    Import hydrogen file from JEFF-3.1.1.
+    >>> tape = sandy.get_endf6_file("jeff_311", 'xs', 10010)
+    >>> assert type(tape) is sandy.Endf6
+
     Import hydrogen file from ENDF/B-VII.1.
     >>> tape = sandy.get_endf6_file("endfb_71", 'xs', 10010)
     >>> assert type(tape) is sandy.Endf6
@@ -263,6 +275,10 @@ def get_endf6_file(library, kind, zam, to_file=False):
 
     Import hydrogen file from JENDL-4.0u
     >>> tape = sandy.get_endf6_file("jendl_40u", 'xs', 10010)
+    >>> assert type(tape) is sandy.Endf6
+
+    Import hydrogen file from TENDL-2023
+    >>> tape = sandy.get_endf6_file("tendl_2023", 'xs', 10010)
     >>> assert type(tape) is sandy.Endf6
 
     Import Neutron-Induced Fission Product Yields for Th-227 from ENDF/B-VII.1.
@@ -333,6 +349,7 @@ def get_endf6_file(library, kind, zam, to_file=False):
     foo_read = Endf6.read_zipurl
     if kind == 'xs':
         available_libs = (
+            "jeff_311".upper(),
             "jeff_32".upper(),
             "jeff_33".upper(),
             "endfb_71".upper(),
@@ -346,6 +363,9 @@ def get_endf6_file(library, kind, zam, to_file=False):
             files = N_FILES_JEFF_40T0_NEA
             foo_read = Endf6.read_url
             foo_get = Endf6.from_url
+        elif library_ == "jeff_311":
+            url = URL_N_JEFF_311_IAEA
+            files = N_FILES_JEFF_311_IAEA
         elif library_ == "jeff_33":
             url = URL_N_JEFF_33_IAEA
             files = N_FILES_JEFF_33_IAEA
@@ -363,6 +383,11 @@ def get_endf6_file(library, kind, zam, to_file=False):
         elif library_ == "jendl_40u":
             url = URL_N_JENDL_40U_IAEA
             files = N_FILES_JENDL_40U_IAEA
+        elif library_ == "tendl_2023":
+            url = URL_N_TENDL_2023_PSI
+            files = N_FILES_TENDL_2023_PSI
+            foo_read = Endf6.read_url
+            foo_get = Endf6.from_url
         elif library_ == "irdff_2":
             url = URL_N_IRDFF_2_IAEA
             files = N_FILES_IRDFF_2_IAEA
@@ -776,7 +801,7 @@ class _FormattedFile():
         return tape
 
     @staticmethod
-    def read_zipurl(filename, rooturl):
+    def read_zipurl(filename, rooturl, mode=2):
         """
         Given a filename and the url where the file is located (in
         zipped format), extract the ENDF6 data from the file into
@@ -816,15 +841,43 @@ class _FormattedFile():
         """
         rootname = os.path.splitext(filename)[0]
         zipurl = f"{rooturl}/{rootname}.zip"
+
         # set a known browser user agent to ensure access
-        req = Request(zipurl, headers={'User-Agent': 'Mozilla/5.0'})
-        with urlopen(req) as zipresp:
-            with ZipFile(io.BytesIO(zipresp.read())) as zfile:
+
+        if mode == 1:
+            req = Request(zipurl, headers={'User-Agent': 'Mozilla/5.0'})
+            with urlopen(req) as zipresp:
+                with ZipFile(io.BytesIO(zipresp.read())) as zfile:
+                    with TemporaryDirectory() as td:
+                        zfile.extract(filename, path=td)
+                        tmpfile = join(td, filename)
+                        with open(tmpfile, "r") as f:
+                            text = f.read()
+
+        elif mode == 2:  # as of 7/10/2024 mode 1 is deprecated because of changes on the IAEA websites
+            class AppURLopener(urllib.request.FancyURLopener):
+                version = "Mozilla/5.0"
+
+            # Instantiate the custom opener
+            opener = AppURLopener()
+
+            # Open the URL using the custom opener
+            response = opener.open(zipurl)
+                
+            # Read the response content into a bytes object
+            zip_data = response.read()
+
+            # Ensure the response is closed
+            response.close()
+
+            # Use the zipfile module to read the zip file from the bytes object
+            with ZipFile(io.BytesIO(zip_data)) as zfile:
                 with TemporaryDirectory() as td:
                     zfile.extract(filename, path=td)
                     tmpfile = join(td, filename)
                     with open(tmpfile, "r") as f:
                         text = f.read()
+
         return text
 
     @classmethod

@@ -415,8 +415,8 @@ class Xs():
         >>> assert xsr.data[(9543, 4)].equals(xsr.data[9543].loc[:, 50:91].sum(axis=1))
         """
         df = self.data.copy()
-        for mat, group in df.groupby("MAT", axis=1):
-        
+        for mat, group_ in df.T.groupby("MAT"):
+            group = group_.T
             # starting from the lat redundant cross section, find daughters and sum them
             for parent, daughters in sorted(sandy.redundant_xs.items(), reverse=True):
                 # it must be df, not group, because df is updated
